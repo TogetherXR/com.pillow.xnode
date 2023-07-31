@@ -60,44 +60,5 @@ namespace XNodeEditor
             // Check script type. Return if deleting a non-node script
             return AssetDeleteResult.DidNotDelete;
         }
-
-        [InitializeOnLoadMethod]
-        private static void Init() => OnReloadEditor();
-
-        /// <summary> Automatically re-add loose node assets to the Graph node list </summary>
-        private static void OnReloadEditor() => EditorApplication.delayCall += () =>
-        {
-            if (EditorApplication.isUpdating)
-            {
-                OnReloadEditor();
-                return;
-            }
-
-            // Find all NodeGraph assets
-            var guids = AssetDatabase.FindAssets($"t:{typeof(XNode.NodeGraph)}");
-
-            for (var i = 0; i < guids.Length; i++)
-            {
-                var assetPath = AssetDatabase.GUIDToAssetPath(guids[i]);
-
-                if (AssetDatabase.LoadAssetAtPath(assetPath, typeof(XNode.NodeGraph)) is XNode.NodeGraph graph)
-                {
-                    graph.nodes.RemoveAll(x => x == null); //Remove null items
-                    var objects = AssetDatabase.LoadAllAssetRepresentationsAtPath(assetPath);
-
-                    // Ensure that all sub node assets are present in the graph node list
-                    for (var u = 0; u < objects.Length; u++)
-                    {
-                        // Ignore null sub assets
-                        if (objects[u] == null) { continue; }
-
-                        if (!graph.nodes.Contains(objects[u] as XNode.Node))
-                        {
-                            graph.nodes.Add(objects[u] as XNode.Node);
-                        }
-                    }
-                }
-            }
-        };
     }
 }
